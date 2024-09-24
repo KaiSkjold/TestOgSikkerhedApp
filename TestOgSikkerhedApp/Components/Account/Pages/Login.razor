@@ -5,15 +5,15 @@
 @using Microsoft.AspNetCore.Identity
 @using TestOgSikkerhedApp.Data
 
-@inject SignInManager<ApplicationUser> SignInManager
+@inject SignInManager<ToDoModel> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
 <PageTitle>Log in</PageTitle>
 
-<h1>Log in</h1>
-<div class="row">
+<h1 class="text-center">Log in</h1>
+<div class="row d-flex justify-content-center mt-4">
     <div class="col-md-4">
         <section>
             <StatusMessage Message="@errorMessage" />

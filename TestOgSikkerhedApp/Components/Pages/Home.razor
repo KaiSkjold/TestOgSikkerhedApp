@@ -2,6 +2,7 @@
 
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity;
+@using TestOgSikkerhedApp.Data
 @inject IServiceProvider _serviceProvider;
 @* @inject UserManager<Data.ApplicationUser> UserManager; *@
 @inject AuthenticationStateProvider _authenticationStateProvider;
@@ -9,38 +10,67 @@
 @attribute [Authorize(Policy = "AuthenticatedUser")]
 
 
-<PageTitle>Home</PageTitle>
 
-@*  @if(_isAuthenticated)
- {
-     <p>You are logged in</p>
-     @if(_isAdmin)
-     {
-         <p>You are Admin</p>
-     }
- } else
- {
-     <p>You are NOT logged in</p>
- } *@
 
-<AuthorizeView>
-    <Authorized>
-        <p>You are logged in</p>
-    </Authorized>
-    <NotAuthorized>
-        <p>You are NOT logged in</p>
-    </NotAuthorized>
-</AuthorizeView>
-<AuthorizeView Roles="Admin">
-    <Authorized>
-        <p>You are Admin</p>
-    </Authorized>
-</AuthorizeView>
+    <PageTitle>To Do List App</PageTitle>
+
+    <AuthorizeView>
+        <h1 class="text-center mt-4 mb-3">Hello @context.User.Identity?.Name!</h1>
+    </AuthorizeView>
+
+    @if (cprNum == string.Empty)
+    {
+        <h3 class="text-center mb-5">Please enter your cpr: </h3>
+
+        <div class="d-flex justify-content-center">
+
+            <input class="text-center m-1" type="text" @bind="@inputValueCpr" placeholder="XXXXXX-XXXX" @oninput="OnInputEvent">
+
+            <button class="btn-info m-1" onclick="submit">Submit</button>
+
+        </div>
+    }
+    else
+    {
+        <h3 class="text-center mb-5">Enter ToDo item: </h3>
+
+        <div class="d-flex justify-content-center">
+
+            <input class="text-center m-1" type="text" @bind="@inputValueItem" placeholder="Things you need to get done" @oninput="OnInputEvent">
+
+            <button class="btn-info m-1" onclick="addItem">Add Item</button>
+
+        </div>
+
+        <table class="table table-striped table-bordered mt-4">
+            <thead>
+                <tr>
+                    <th>Todo:</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var thing in list)
+                {
+                    <tr>
+                        <td>@thing</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
 
 
 @code {
     private bool _isAuthenticated;
     private bool _isAdmin;
+    private string? cprNum = "string.Empty";
+    private string inputValueCpr;
+    private string inputValueItem;
+
+    private List<string> list = new List<string> { "thing1", "thing2", "thing3" };
+    private List<ToDoItem> toDos;
 
     public bool IsAuthenticated => _isAuthenticated;
     public bool IsAdmin => _isAdmin;
@@ -57,6 +87,25 @@
         // await CreateUserRolesAsync("skjoldann@gmail.com", "Admin");
     }
 
+    private void OnInputEvent(ChangeEventArgs changeEvent)
+    {
+        inputValueCpr = (string)changeEvent.Value;
+        inputValueItem = (string)changeEvent.Value;
+    }
+
+    private void submit()
+    {
+        cprNum = inputValueCpr;
+    }
+    private void addItem()
+    {
+        // TODO add to database
+    }
+
+    private async Task GetAllTodos()
+    {
+        
+    }
     // public async Task CreateUserRolesAsync(string user, string role)
     // {
     //     var roleManager = _serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();

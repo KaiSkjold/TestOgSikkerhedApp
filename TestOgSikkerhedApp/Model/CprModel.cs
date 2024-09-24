@@ -8,7 +8,7 @@ namespace TestOgSikkerhedApp.Data
         [Key]
         public int cprId { get; set; }
 
-        public int cprNum { get; set; }
+        public string cprNum { get; set; }
         public string userName { get; set; }
 
         public List<ToDoItem> toDoItems { get; set; }

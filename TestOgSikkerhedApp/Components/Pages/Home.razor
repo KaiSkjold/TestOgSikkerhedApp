@@ -28,11 +28,16 @@
 
         <div class="d-flex justify-content-center">
 
-        <input class="text-center m-1" type="number" @bind="@inputValueCpr" placeholder="XXXXXX-XXXX" @oninput="OnCprInput">
+        <input class="text-center m-1" type="text" @bind="@inputValueCpr" placeholder="XXXXXX-XXXX" @oninput="OnCprInput">
 
             <button class="btn-info m-1" @onclick="addCpr">Submit</button>
 
         </div>
+
+        @if (wrongCpr)
+        {
+            <p>test wrong cpr number</p>
+        }
     }
     else
     {
@@ -74,10 +79,11 @@
     public bool IsAdmin => _isAdmin;
     public bool isNotAuthCpr = true;
     public string _userName;
+    public bool wrongCpr = false;
 
     // input related variables
-    private int? cprNum = 0;
-    private int inputValueCpr;
+    private string? cprNum = "";
+    private string inputValueCpr;
     private string inputValueItem;
 
     // database variables
@@ -95,11 +101,6 @@
         _isAdmin = authUser.IsInRole("Admin");
         _userName = authUser.Identity.Name;
 
-
-        //Hashing Test MD5 - DONT USE
-        string textToHashMd5 = "Aisha";
-        string hashedValueMd5 = _hashingHandler.MD5Hashing(textToHashMd5);
-
         //Hashing Test SHA256 - USE
         string textToHashSha = "Aisha";
         string hashedValueSha = _hashingHandler.SHA256Hashing(textToHashSha);
@@ -115,15 +116,6 @@
     private void OnCprInput(ChangeEventArgs e)
     {
         var inputValue = (string)e.Value;
-
-        if (int.TryParse(inputValue, out int cpr))
-        {
-            inputValueCpr = cpr;
-        }
-        else
-        {
-            inputValueCpr = 0;
-        }
     }
 
     private void OnItemInput(ChangeEventArgs e)
@@ -134,18 +126,41 @@
     private async Task addCpr()
     {
         cprNum = inputValueCpr;
+        var hashedCprNum = _hashingHandler.SHA256Hashing(cprNum.ToString());
+
+        if(cprs.Count == 0)
+        {
+            if (!string.IsNullOrEmpty(inputValueItem))
+            {
+                CprUser newCpr = new CprUser
+                    {
+                        cprNum = hashedCprNum,
+                        userName = _userName
+
+                    };
+
+                await _cprRepo.CreateCprAsync(newCpr);
+
+                inputValueCpr = "";
+                isNotAuthCpr = false;
+
+            }
+        }
 
         foreach(var cprNumber in cprs)
         {
 
-            if (cprNumber.cprNum == cprNum)
+            if (cprNumber.cprNum == hashedCprNum)
             {
                 if(cprNumber.userName == _userName)
                 {
-                    inputValueCpr = 0;
+                    inputValueCpr = "";
+                    wrongCpr = false;
+                    isNotAuthCpr = false;
+
                 } else
                 {
-                    
+                    wrongCpr = true;
                 }
             } 
             else
@@ -154,18 +169,20 @@
                 {
                     CprUser newCpr = new CprUser
                         {
-                            cprNum = inputValueCpr
+                            cprNum = hashedCprNum,
+                            userName = _userName
 
                         };
 
                     await _cprRepo.CreateCprAsync(newCpr);
 
-                    inputValueCpr = 0;
+                    inputValueCpr = "";
+                    isNotAuthCpr = false;
 
                 }
             }
         }
-        isNotAuthCpr = false;
+
         StateHasChanged();
     }
 

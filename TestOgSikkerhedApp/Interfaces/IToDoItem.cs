@@ -4,9 +4,9 @@ namespace TestOgSikkerhedApp.Interfaces
 {
     public interface IToDoItem
     {
-        Task<ToDoItem> CreateCprAsync(ToDoItem newItem);
-        Task<ToDoItem> UpdateCprAsync(ToDoItem updateItem);
-        Task<ToDoItem> DeleteCprAsync(ToDoItem deleteItem);
-        Task<List<ToDoItem>> GetAll();
+        Task<ToDoItem> CreateTodoAsync(ToDoItem newItem);
+        Task<ToDoItem> UpdateTodoAsync(ToDoItem updateItem);
+        Task<ToDoItem> DeleteTodoAsync(ToDoItem deleteItem);
+        Task<List<ToDoItem>> GetAllTodo();
     }
 }

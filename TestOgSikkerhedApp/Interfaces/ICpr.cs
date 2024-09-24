@@ -7,6 +7,6 @@ namespace TestOgSikkerhedApp.Interfaces
         Task<CprUser> CreateCprAsync(CprUser newUser);
         Task<CprUser> UpdateCprAsync(CprUser updateUser);
         Task<CprUser> DeleteCprAsync(CprUser deleteUser);
-        Task<List<CprUser>> GetAll();
+        Task<List<CprUser>> GetAllCpr();
     }
 }

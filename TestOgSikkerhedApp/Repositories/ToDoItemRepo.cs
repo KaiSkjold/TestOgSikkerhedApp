@@ -12,22 +12,24 @@ namespace TestOgSikkerhedApp.Repositories
         {
             this._todoItemContext = todoItemContext;
         }
-        public Task<ToDoItem> CreateCprAsync(ToDoItem newItem)
+        public async Task<ToDoItem> CreateTodoAsync(ToDoItem newItem)
+        {
+            _todoItemContext.ToDos.Add(newItem);
+            await _todoItemContext.SaveChangesAsync();
+            return newItem;
+        }
+
+        public Task<ToDoItem> DeleteTodoAsync(ToDoItem deleteItem)
         {
             throw new NotImplementedException();
         }
 
-        public Task<ToDoItem> DeleteCprAsync(ToDoItem deleteItem)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<ToDoItem>> GetAll()
+        public Task<List<ToDoItem>> GetAllTodo()
         {
             return _todoItemContext.ToDos.ToListAsync();
         }
 
-        public Task<ToDoItem> UpdateCprAsync(ToDoItem updateItem)
+        public Task<ToDoItem> UpdateTodoAsync(ToDoItem updateItem)
         {
             throw new NotImplementedException();
         }

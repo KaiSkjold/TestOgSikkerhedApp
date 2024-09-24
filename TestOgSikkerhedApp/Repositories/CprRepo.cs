@@ -12,9 +12,11 @@ namespace TestOgSikkerhedApp.Repositories
         {
             this._todoItemContext = todoItemContext;
         }
-        public Task<CprUser> CreateCprAsync(CprUser newUser)
+        public async Task<CprUser> CreateCprAsync(CprUser newUser)
         {
-            throw new NotImplementedException();
+            _todoItemContext.Cprs.Add(newUser);
+            await _todoItemContext.SaveChangesAsync();
+            return newUser;
         }
 
         public Task<CprUser> DeleteCprAsync(CprUser deleteUser)
@@ -27,7 +29,7 @@ namespace TestOgSikkerhedApp.Repositories
             return _todoItemContext;
         }
 
-        public Task<List<CprUser>> GetAll()
+        public Task<List<CprUser>> GetAllCpr()
         {
             return _todoItemContext.Cprs.ToListAsync();
         }

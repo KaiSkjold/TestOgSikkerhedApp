@@ -2,10 +2,14 @@
 
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity;
-@using TestOgSikkerhedApp.Data
+@using TestOgSikkerhedApp.Data;
+@using TestOgSikkerhedApp.Repositories;
 @inject IServiceProvider _serviceProvider;
 @* @inject UserManager<Data.ApplicationUser> UserManager; *@
 @inject AuthenticationStateProvider _authenticationStateProvider;
+@inject Codes.HashingHandler _hashingHandler;
+@inject ToDoItemRepo _todoRepo;
+@inject CprRepo _cprRepo;
 
 @attribute [Authorize(Policy = "AuthenticatedUser")]
 
@@ -18,15 +22,15 @@
         <h1 class="text-center mt-4 mb-3">Hello @context.User.Identity?.Name!</h1>
     </AuthorizeView>
 
-    @if (cprNum == string.Empty)
+    @if (isNotAuthCpr)
     {
         <h3 class="text-center mb-5">Please enter your cpr: </h3>
 
         <div class="d-flex justify-content-center">
 
-            <input class="text-center m-1" type="text" @bind="@inputValueCpr" placeholder="XXXXXX-XXXX" @oninput="OnInputEvent">
+        <input class="text-center m-1" type="number" @bind="@inputValueCpr" placeholder="XXXXXX-XXXX" @oninput="OnCprInput">
 
-            <button class="btn-info m-1" onclick="submit">Submit</button>
+            <button class="btn-info m-1" @onclick="addCpr">Submit</button>
 
         </div>
     }
@@ -36,9 +40,9 @@
 
         <div class="d-flex justify-content-center">
 
-            <input class="text-center m-1" type="text" @bind="@inputValueItem" placeholder="Things you need to get done" @oninput="OnInputEvent">
+        <input class="text-center m-1" type="text" @bind="@inputValueItem" placeholder="Things you need to get done" @oninput="OnItemInput">
 
-            <button class="btn-info m-1" onclick="addItem">Add Item</button>
+        <button class="btn-info m-1" @onclick="addItem">Add Item</button>
 
         </div>
 
@@ -50,10 +54,10 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var thing in list)
+            @foreach (var item in toDos.Where(x => x.userName == _userName))
                 {
                     <tr>
-                        <td>@thing</td>
+                        <td>@item.itemName</td>
                     </tr>
                 }
             </tbody>
@@ -63,17 +67,25 @@
 
 
 @code {
+    // authorized variables
     private bool _isAuthenticated;
     private bool _isAdmin;
-    private string? cprNum = "string.Empty";
-    private string inputValueCpr;
-    private string inputValueItem;
-
-    private List<string> list = new List<string> { "thing1", "thing2", "thing3" };
-    private List<ToDoItem> toDos;
-
     public bool IsAuthenticated => _isAuthenticated;
     public bool IsAdmin => _isAdmin;
+    public bool isNotAuthCpr = true;
+    public string _userName;
+
+    // input related variables
+    private int? cprNum = 0;
+    private int inputValueCpr;
+    private string inputValueItem;
+
+    // database variables
+
+    private List<ToDoItem> toDos = new List<ToDoItem>();
+    private List<CprUser> cprs = new List<CprUser>();
+
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -81,31 +93,100 @@
         var authUser = authenticationState.User;
         _isAuthenticated = authUser.Identity.IsAuthenticated;
         _isAdmin = authUser.IsInRole("Admin");
+        _userName = authUser.Identity.Name;
 
+
+        //Hashing Test MD5 - DONT USE
+        string textToHashMd5 = "Aisha";
+        string hashedValueMd5 = _hashingHandler.MD5Hashing(textToHashMd5);
+
+        //Hashing Test SHA256 - USE
+        string textToHashSha = "Aisha";
+        string hashedValueSha = _hashingHandler.SHA256Hashing(textToHashSha);
+
+
+        toDos = await _todoRepo.GetAllTodo();
+        cprs = await _cprRepo.GetAllCpr();
 
         // not the right way to do this, just example instead of manual creation, make page to add email and role
         // await CreateUserRolesAsync("skjoldann@gmail.com", "Admin");
     }
 
-    private void OnInputEvent(ChangeEventArgs changeEvent)
+    private void OnCprInput(ChangeEventArgs e)
     {
-        inputValueCpr = (string)changeEvent.Value;
-        inputValueItem = (string)changeEvent.Value;
+        var inputValue = (string)e.Value;
+
+        if (int.TryParse(inputValue, out int cpr))
+        {
+            inputValueCpr = cpr;
+        }
+        else
+        {
+            inputValueCpr = 0;
+        }
     }
 
-    private void submit()
+    private void OnItemInput(ChangeEventArgs e)
+    {
+        inputValueItem = (string)e.Value;
+    }
+
+    private async Task addCpr()
     {
         cprNum = inputValueCpr;
-    }
-    private void addItem()
-    {
-        // TODO add to database
+
+        foreach(var cprNumber in cprs)
+        {
+
+            if (cprNumber.cprNum == cprNum)
+            {
+                if(cprNumber.userName == _userName)
+                {
+                    inputValueCpr = 0;
+                } else
+                {
+                    
+                }
+            } 
+            else
+            {
+                if (!string.IsNullOrEmpty(inputValueItem))
+                {
+                    CprUser newCpr = new CprUser
+                        {
+                            cprNum = inputValueCpr
+
+                        };
+
+                    await _cprRepo.CreateCprAsync(newCpr);
+
+                    inputValueCpr = 0;
+
+                }
+            }
+        }
+        isNotAuthCpr = false;
+        StateHasChanged();
     }
 
-    private async Task GetAllTodos()
+    private async Task addItem()
     {
-        
+        if (!string.IsNullOrEmpty(inputValueItem))
+        {
+            ToDoItem newItem = new ToDoItem
+                {
+                    itemName = inputValueItem,
+                    userName = _userName
+                };
+
+            await _todoRepo.CreateTodoAsync(newItem);
+
+            inputValueItem = string.Empty;
+
+            toDos = await _todoRepo.GetAllTodo();
+        }
     }
+
     // public async Task CreateUserRolesAsync(string user, string role)
     // {
     //     var roleManager = _serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();

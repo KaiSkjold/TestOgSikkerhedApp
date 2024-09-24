@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Authentication;
+using TestOgSikkerhedApp.Codes;
 using TestOgSikkerhedApp.Components;
 using TestOgSikkerhedApp.Components.Account;
 using TestOgSikkerhedApp.Data;
@@ -19,6 +20,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddSingleton<HashingHandler>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -29,6 +31,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<ICpr, CprRepo>();
 builder.Services.AddScoped<IToDoItem, ToDoItemRepo>();
+builder.Services.AddScoped<ToDoItemRepo>();
+builder.Services.AddScoped<CprRepo>();
 
 // Database ToDoItem
 var connectionString = builder.Configuration.GetConnectionString("connection") ?? throw new InvalidOperationException("Connection string 'connection' not found.");

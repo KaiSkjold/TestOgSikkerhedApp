@@ -28,7 +28,7 @@
     {
         <h3 class="text-center mb-5">Please enter your cpr: </h3>
 
-        <div class="d-flex justify-content-center">
+        <div class="d-flex justify-content-center mb-3">
 
         <input class="text-center m-1" type="text" @bind="@inputValueCpr" placeholder="XXXXXX-XXXX" @oninput="OnCprInput">
 
@@ -38,8 +38,12 @@
 
         @if (wrongCpr)
         {
-        <div class="alert alert-danger text-center w-50" role="alert">
-                <p>Cpr number is wrong. Try again.</p>
+            <div class=" d-flex justify-content-center">
+
+                <div class="alert alert-danger text-center w-50" role="alert">
+                    <p>Cpr number is wrong. Try again.</p>
+                </div>
+
             </div>
         }
     }
@@ -146,7 +150,6 @@
 
     private async Task addCpr()
     {
-        bool isValidCpr = false;
 
         var hashedCprNum = _hashingHandler.SHA256Hashing(inputValueCpr);
 
@@ -155,14 +158,12 @@
             return;
         }
 
-        while (!isValidCpr)
-        {
+
             if (cprs.Count == 0 && !string.IsNullOrEmpty(inputValueCpr))
             {
                 await createNewCpr(hashedCprNum, _userName);
                 inputValueCpr = "";
                 isNotAuthCpr = false;
-                isValidCpr = true;
             }
             else
             {
@@ -176,12 +177,10 @@
                             inputValueCpr = "";
                             wrongCpr = false;
                             isNotAuthCpr = false;
-                            isValidCpr = true;
                         }
                         else
                         {
                             wrongCpr = true;
-                            isValidCpr = true;
                         }
 
                     } 
@@ -194,14 +193,11 @@
 
                             inputValueCpr = "";
                             isNotAuthCpr = false;
-                            isValidCpr = true;
                         }
                     }
                 }
                 StateHasChanged();
             }
-  
-        }
     }
 
     private async Task createNewCpr(string cpr, string name)

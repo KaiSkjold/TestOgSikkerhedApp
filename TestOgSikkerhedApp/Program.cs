@@ -21,6 +21,8 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 builder.Services.AddSingleton<HashingHandler>();
+builder.Services.AddSingleton<SymetriskEncryptionHandler>();
+builder.Services.AddSingleton<AsymetriskEncryptionHandler>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -93,6 +95,9 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequiredUniqueChars = 1;
 });
 
+// Add encryption
+builder.Services.AddDataProtection();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

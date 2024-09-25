@@ -4,10 +4,12 @@
 @using Microsoft.AspNetCore.Identity;
 @using TestOgSikkerhedApp.Data;
 @using TestOgSikkerhedApp.Repositories;
-@inject IServiceProvider _serviceProvider;
 @* @inject UserManager<Data.ApplicationUser> UserManager; *@
+@inject IServiceProvider _serviceProvider;
 @inject AuthenticationStateProvider _authenticationStateProvider;
 @inject Codes.HashingHandler _hashingHandler;
+@inject Codes.SymetriskEncryptionHandler _symetricEnryptionHandler;
+@inject Codes.AsymetriskEncryptionHandler _asymetricEcryptionHandler;
 @inject ToDoItemRepo _todoRepo;
 @inject CprRepo _cprRepo;
 
@@ -36,7 +38,9 @@
 
         @if (wrongCpr)
         {
-            <p>test wrong cpr number</p>
+        <div class="alert alert-danger text-center w-50" role="alert">
+                <p>Cpr number is wrong. Try again.</p>
+            </div>
         }
     }
     else
@@ -59,10 +63,10 @@
                 </tr>
             </thead>
             <tbody>
-            @foreach (var item in toDos.Where(x => x.userName == _userName))
+            @foreach (var item in toDos.Where(x => _symetricEnryptionHandler.Unprotect(x.userName) == _userName))
                 {
                     <tr>
-                        <td>@item.itemName</td>
+                    <td>@_symetricEnryptionHandler.Unprotect(item.itemName)</td>
                     </tr>
                 }
             </tbody>
@@ -101,9 +105,11 @@
         _isAdmin = authUser.IsInRole("Admin");
         _userName = authUser.Identity.Name;
 
-        //Hashing Test SHA256 - USE
-        string textToHashSha = "Aisha";
-        string hashedValueSha = _hashingHandler.SHA256Hashing(textToHashSha);
+        // Asymetric encryption test
+        string textToEncrypt = "Aisha1";
+        string encryptText = await _asymetricEcryptionHandler.AsymetricEncrypt(textToEncrypt);
+        string decrypt = await _asymetricEcryptionHandler.AsymetricDescrypt(encryptText);
+
 
 
         toDos = await _todoRepo.GetAllTodo();
@@ -111,97 +117,6 @@
 
         // not the right way to do this, just example instead of manual creation, make page to add email and role
         // await CreateUserRolesAsync("skjoldann@gmail.com", "Admin");
-    }
-
-    private void OnCprInput(ChangeEventArgs e)
-    {
-        var inputValue = (string)e.Value;
-    }
-
-    private void OnItemInput(ChangeEventArgs e)
-    {
-        inputValueItem = (string)e.Value;
-    }
-
-    private async Task addCpr()
-    {
-        cprNum = inputValueCpr;
-        var hashedCprNum = _hashingHandler.SHA256Hashing(cprNum.ToString());
-
-        if(cprs.Count == 0)
-        {
-            if (!string.IsNullOrEmpty(inputValueItem))
-            {
-                CprUser newCpr = new CprUser
-                    {
-                        cprNum = hashedCprNum,
-                        userName = _userName
-
-                    };
-
-                await _cprRepo.CreateCprAsync(newCpr);
-
-                inputValueCpr = "";
-                isNotAuthCpr = false;
-
-            }
-        }
-
-        foreach(var cprNumber in cprs)
-        {
-
-            if (cprNumber.cprNum == hashedCprNum)
-            {
-                if(cprNumber.userName == _userName)
-                {
-                    inputValueCpr = "";
-                    wrongCpr = false;
-                    isNotAuthCpr = false;
-
-                } else
-                {
-                    wrongCpr = true;
-                }
-            } 
-            else
-            {
-                if (!string.IsNullOrEmpty(inputValueItem))
-                {
-                    CprUser newCpr = new CprUser
-                        {
-                            cprNum = hashedCprNum,
-                            userName = _userName
-
-                        };
-
-                    await _cprRepo.CreateCprAsync(newCpr);
-
-                    inputValueCpr = "";
-                    isNotAuthCpr = false;
-
-                }
-            }
-        }
-
-        StateHasChanged();
-    }
-
-    private async Task addItem()
-    {
-        if (!string.IsNullOrEmpty(inputValueItem))
-        {
-            ToDoItem newItem = new ToDoItem
-                {
-                    itemName = inputValueItem,
-                    userName = _userName
-                };
-
-            await _todoRepo.CreateTodoAsync(newItem);
-
-            inputValueItem = string.Empty;
-
-            toDos = await _todoRepo.GetAllTodo();
-        }
     }
 
     // public async Task CreateUserRolesAsync(string user, string role)
@@ -218,4 +133,109 @@
     //     Data.ApplicationUser identityUser = await userManager.FindByEmailAsync(user);
     //     await userManager.AddToRoleAsync(identityUser, role);
     // }
+
+    private void OnCprInput(ChangeEventArgs e)
+    {
+        var inputValue = (string)e.Value;
+    }
+
+    private void OnItemInput(ChangeEventArgs e)
+    {
+        inputValueItem = (string)e.Value;
+    }
+
+    private async Task addCpr()
+    {
+        bool isValidCpr = false;
+
+        var hashedCprNum = _hashingHandler.SHA256Hashing(inputValueCpr);
+
+        if (string.IsNullOrEmpty(inputValueCpr))
+        {
+            return;
+        }
+
+        while (!isValidCpr)
+        {
+            if (cprs.Count == 0 && !string.IsNullOrEmpty(inputValueCpr))
+            {
+                await createNewCpr(hashedCprNum, _userName);
+                inputValueCpr = "";
+                isNotAuthCpr = false;
+                isValidCpr = true;
+            }
+            else
+            {
+                foreach (var cprNumber in cprs)
+                {
+
+                    if (cprNumber.userName == _userName)
+                    {
+                        if (cprNumber.cprNum == hashedCprNum)
+                        {
+                            inputValueCpr = "";
+                            wrongCpr = false;
+                            isNotAuthCpr = false;
+                            isValidCpr = true;
+                        }
+                        else
+                        {
+                            wrongCpr = true;
+                            isValidCpr = true;
+                        }
+
+                    } 
+
+                    else
+                    {
+                        if (!string.IsNullOrEmpty(inputValueItem))
+                        {
+                            await createNewCpr(hashedCprNum, _userName);
+
+                            inputValueCpr = "";
+                            isNotAuthCpr = false;
+                            isValidCpr = true;
+                        }
+                    }
+                }
+                StateHasChanged();
+            }
+  
+        }
+    }
+
+    private async Task createNewCpr(string cpr, string name)
+    {
+        CprUser newCpr = new CprUser
+            {
+                cprNum = cpr,
+                userName = name
+            };
+
+        await _cprRepo.CreateCprAsync(newCpr);
+    }
+
+    private async Task addItem()
+    {
+        if (!string.IsNullOrEmpty(inputValueItem))
+        {
+            string encryptedItemName = _symetricEnryptionHandler.Protect(inputValueItem);
+            string encryptedUserName = _symetricEnryptionHandler.Protect(_userName);
+
+            ToDoItem newItem = new ToDoItem
+                {
+                    itemName = encryptedItemName,
+                    userName = encryptedUserName
+                };
+
+            
+            await _todoRepo.CreateTodoAsync(newItem);
+
+            inputValueItem = string.Empty;
+
+            toDos = await _todoRepo.GetAllTodo();
+        }
+    }
+
+   
 }

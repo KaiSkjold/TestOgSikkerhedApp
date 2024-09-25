@@ -14,9 +14,17 @@ namespace TestOgSikkerhedApp.Repositories
         }
         public async Task<CprUser> CreateCprAsync(CprUser newUser)
         {
-            _todoItemContext.Cprs.Add(newUser);
-            await _todoItemContext.SaveChangesAsync();
-            return newUser;
+            try
+            {
+                _todoItemContext.Cprs.Add(newUser);
+                await _todoItemContext.SaveChangesAsync();
+                return newUser;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                throw;
+            }
         }
 
         public Task<CprUser> DeleteCprAsync(CprUser deleteUser)

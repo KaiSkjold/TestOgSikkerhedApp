@@ -5,7 +5,7 @@
 namespace TestOgSikkerhedApp.Migrations.TodoItem
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initialCommit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,7 +16,7 @@ namespace TestOgSikkerhedApp.Migrations.TodoItem
                 {
                     cprId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    cprNum = table.Column<int>(type: "int", nullable: false),
+                    cprNum = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     userName = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -28,36 +28,23 @@ namespace TestOgSikkerhedApp.Migrations.TodoItem
                 name: "ToDos",
                 columns: table => new
                 {
-                    itemId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    itemName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    userName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CprUsercprId = table.Column<int>(type: "int", nullable: true)
+                    userName = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    itemName = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ToDos", x => x.itemId);
-                    table.ForeignKey(
-                        name: "FK_ToDos_Cprs_CprUsercprId",
-                        column: x => x.CprUsercprId,
-                        principalTable: "Cprs",
-                        principalColumn: "cprId");
+                    table.PrimaryKey("PK_ToDos", x => x.userName);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ToDos_CprUsercprId",
-                table: "ToDos",
-                column: "CprUsercprId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ToDos");
+                name: "Cprs");
 
             migrationBuilder.DropTable(
-                name: "Cprs");
+                name: "ToDos");
         }
     }
 }

@@ -14,9 +14,18 @@ namespace TestOgSikkerhedApp.Repositories
         }
         public async Task<ToDoItem> CreateTodoAsync(ToDoItem newItem)
         {
-            _todoItemContext.ToDos.Add(newItem);
-            await _todoItemContext.SaveChangesAsync();
-            return newItem;
+            try
+            {
+                _todoItemContext.ToDos.Add(newItem);
+                await _todoItemContext.SaveChangesAsync();
+                return newItem;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                throw;
+            }
+
         }
 
         public Task<ToDoItem> DeleteTodoAsync(ToDoItem deleteItem)

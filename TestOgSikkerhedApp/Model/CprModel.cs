@@ -1,17 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TestOgSikkerhedApp.Data
+namespace TestOgSikkerhedApp.Data;
+
+public class CprUser
 {
-    public class CprUser
-    {
-        [Key]
-        public int cprId { get; set; }
+    [Key]
+    public int cprId { get; set; }
 
-        public string cprNum { get; set; }
-        public string userName { get; set; }
+    public string cprNum { get; set; }
 
-        public List<ToDoItem> toDoItems { get; set; }
-    }
+    public string userName { get; set; }
 
 }

@@ -77,7 +77,7 @@ public class AsymetriskEncryptionHandler
         {
             rsa.FromXmlString(_publicEncryptionKey);
 
-            byte[] byteToArrayEncrypt = System.Text.Encoding.UTF8.GetBytes(textToEncrypt);
+            byte[] byteToArrayEncrypt = Encoding.UTF8.GetBytes(textToEncrypt);
             byte[] encryptedDataAsByteArray = rsa.Encrypt(byteToArrayEncrypt, true);
 
             string encryptedDataString = Convert.ToBase64String(encryptedDataAsByteArray);

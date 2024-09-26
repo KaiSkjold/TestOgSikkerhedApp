@@ -71,7 +71,7 @@
             @foreach (var item in toDos.Where(x =>_asymetricEcryptionHandler.AsymetricDescrypt(x.userName) == _userName))
                 {
                     <tr>
-                    <td>@_asymetricEcryptionHandler.AsymetricDescrypt(item.itemName)</td>
+                     <td>@_asymetricEcryptionHandler.AsymetricDescrypt(item.itemName)</td>
                     @if (toDos.Where(x => _asymetricEcryptionHandler.AsymetricDescrypt(x.userName) == _userName).Count() <= 0)
                     {
                         <td>You have no to do items in your list</td>

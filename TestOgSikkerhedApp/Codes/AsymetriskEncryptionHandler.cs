@@ -1,5 +1,6 @@
 ﻿namespace TestOgSikkerhedApp.Codes;
 
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -54,21 +55,38 @@ public class AsymetriskEncryptionHandler
     }
 
     // PROOF OF CONCEPT
+
+    //public async Task<string> AsymetricEncrypt(string textToEncrypt)
+    //{
+    //    string[] param = new string[] { textToEncrypt, _publicEncryptionKey };
+    //    string serializeObject = JsonConvert.SerializeObject(param);
+    //    StringContent sc = new StringContent(serializeObject, Encoding.UTF8, "application/json");
+
+    //    var encryptedValue = await _httpClient.PostAsync("https://localhost:7177/api/Encrypter", sc);
+    //    encryptedValue.EnsureSuccessStatusCode();
+
+    //    string encryptedValueString = encryptedValue.Content.ReadAsStringAsync().Result;
+
+    //    return encryptedValueString;
+    //}
+
     public async Task<string> AsymetricEncrypt(string textToEncrypt)
     {
-        string[] param = new string[] { textToEncrypt, _publicEncryptionKey };
-        string serializeObject = JsonConvert.SerializeObject(param);
-        StringContent sc = new StringContent(serializeObject, Encoding.UTF8, "application/json");
 
-        var encryptedValue = await _httpClient.PostAsync("https://localhost:7177/api/Encrypter", sc);
-        encryptedValue.EnsureSuccessStatusCode();
+        using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+        {
+            rsa.FromXmlString(_publicEncryptionKey);
 
-        string encryptedValueString = encryptedValue.Content.ReadAsStringAsync().Result;
+            byte[] byteToArrayEncrypt = System.Text.Encoding.UTF8.GetBytes(textToEncrypt);
+            byte[] encryptedDataAsByteArray = rsa.Encrypt(byteToArrayEncrypt, true);
 
-        return encryptedValueString;
+            string encryptedDataString = Convert.ToBase64String(encryptedDataAsByteArray);
+
+            return encryptedDataString;
+        }
     }
-     
-    public async Task<string> AsymetricDescrypt(string textToDecrypt)
+
+    public string AsymetricDescrypt(string textToDecrypt)
     {
         using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
         {

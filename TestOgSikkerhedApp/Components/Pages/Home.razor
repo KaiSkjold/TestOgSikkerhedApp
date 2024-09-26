@@ -21,7 +21,7 @@
     <PageTitle>To Do List App</PageTitle>
 
     <AuthorizeView>
-        <h1 class="text-center mt-4 mb-3">Hello @context.User.Identity?.Name!</h1>
+        <h1 class="text-center mt-4 mb-3 fw-bold">Hello @context.User.Identity?.Name!</h1>
     </AuthorizeView>
 
     @if (isNotAuthCpr)
@@ -67,10 +67,10 @@
                 </tr>
             </thead>
             <tbody>
-            @foreach (var item in toDos.Where(x => _symetricEnryptionHandler.Unprotect(x.userName) == _userName))
+            @foreach (var item in toDos.Where(x =>_asymetricEcryptionHandler.AsymetricDescrypt(x.userName) == _userName))
                 {
                     <tr>
-                    <td>@_symetricEnryptionHandler.Unprotect(item.itemName)</td>
+                    <td>@_asymetricEcryptionHandler.AsymetricDescrypt(item.itemName)</td>
                     </tr>
                 }
             </tbody>
@@ -112,7 +112,7 @@
         // Asymetric encryption test
         string textToEncrypt = "Aisha1";
         string encryptText = await _asymetricEcryptionHandler.AsymetricEncrypt(textToEncrypt);
-        string decrypt = await _asymetricEcryptionHandler.AsymetricDescrypt(encryptText);
+        string decrypt = _asymetricEcryptionHandler.AsymetricDescrypt(encryptText);
 
 
 
@@ -159,45 +159,45 @@
         }
 
 
-            if (cprs.Count == 0 && !string.IsNullOrEmpty(inputValueCpr))
+        if (cprs.Count == 0 && !string.IsNullOrEmpty(inputValueCpr))
+        {
+            await createNewCpr(hashedCprNum, _userName);
+            inputValueCpr = "";
+            isNotAuthCpr = false;
+        }
+        else
+        {
+            foreach (var cprNumber in cprs)
             {
-                await createNewCpr(hashedCprNum, _userName);
-                inputValueCpr = "";
-                isNotAuthCpr = false;
-            }
-            else
-            {
-                foreach (var cprNumber in cprs)
+
+                if (cprNumber.userName == _userName)
                 {
-
-                    if (cprNumber.userName == _userName)
+                    if (cprNumber.cprNum == hashedCprNum)
                     {
-                        if (cprNumber.cprNum == hashedCprNum)
-                        {
-                            inputValueCpr = "";
-                            wrongCpr = false;
-                            isNotAuthCpr = false;
-                        }
-                        else
-                        {
-                            wrongCpr = true;
-                        }
-
-                    } 
-
+                        inputValueCpr = "";
+                        wrongCpr = false;
+                        isNotAuthCpr = false;
+                    }
                     else
                     {
-                        if (!string.IsNullOrEmpty(inputValueItem))
-                        {
-                            await createNewCpr(hashedCprNum, _userName);
+                        wrongCpr = true;
+                    }
 
-                            inputValueCpr = "";
-                            isNotAuthCpr = false;
-                        }
+                } 
+
+                else
+                {
+                    if (!string.IsNullOrEmpty(inputValueItem))
+                    {
+                        await createNewCpr(hashedCprNum, _userName);
+
+                        inputValueCpr = "";
+                        isNotAuthCpr = false;
                     }
                 }
-                StateHasChanged();
             }
+            StateHasChanged();
+        }
     }
 
     private async Task createNewCpr(string cpr, string name)
@@ -215,8 +215,8 @@
     {
         if (!string.IsNullOrEmpty(inputValueItem))
         {
-            string encryptedItemName = _symetricEnryptionHandler.Protect(inputValueItem);
-            string encryptedUserName = _symetricEnryptionHandler.Protect(_userName);
+            string encryptedItemName = await _asymetricEcryptionHandler.AsymetricEncrypt(inputValueItem);
+            string encryptedUserName = await _asymetricEcryptionHandler.AsymetricEncrypt(_userName);
 
             ToDoItem newItem = new ToDoItem
                 {

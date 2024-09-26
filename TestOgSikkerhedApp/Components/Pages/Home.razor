@@ -28,24 +28,25 @@
     {
         <h3 class="text-center mb-5">Please enter your cpr: </h3>
 
+        @if (wrongCpr)
+        {
+            <div class=" d-flex justify-content-center m-2">
+
+                <div class="alert alert-danger text-center w-50" role="alert">
+                    <h3>Cpr number is wrong. Try again.</h3>
+                </div>
+
+            </div>
+        }
+
         <div class="d-flex justify-content-center mb-3">
 
-        <input class="text-center m-1" type="text" @bind="@inputValueCpr" placeholder="XXXXXX-XXXX" @oninput="OnCprInput">
+        <input class="text-center m-1" type="text" @bind="@inputValueCpr" placeholder="XXXXXX-XXXX" @oninput="OnCprInput" @onkeydown="@keydown">
 
             <button class="btn-info m-1" @onclick="addCpr">Submit</button>
 
         </div>
 
-        @if (wrongCpr)
-        {
-            <div class=" d-flex justify-content-center">
-
-                <div class="alert alert-danger text-center w-50" role="alert">
-                    <p>Cpr number is wrong. Try again.</p>
-                </div>
-
-            </div>
-        }
     }
     else
     {
@@ -59,7 +60,7 @@
 
         </div>
 
-        <table class="table table-striped table-bordered mt-4">
+        <table class="table table-striped table-bordered mt-4 text-lg-start">
             <thead>
                 <tr>
                     <th>Todo:</th>
@@ -71,6 +72,10 @@
                 {
                     <tr>
                     <td>@_asymetricEcryptionHandler.AsymetricDescrypt(item.itemName)</td>
+                    @if (toDos.Where(x => _asymetricEcryptionHandler.AsymetricDescrypt(x.userName) == _userName).Count() <= 0)
+                    {
+                        <td>You have no to do items in your list</td>
+                    }
                     </tr>
                 }
             </tbody>
@@ -110,9 +115,9 @@
         _userName = authUser.Identity.Name;
 
         // Asymetric encryption test
-        string textToEncrypt = "Aisha1";
-        string encryptText = await _asymetricEcryptionHandler.AsymetricEncrypt(textToEncrypt);
-        string decrypt = _asymetricEcryptionHandler.AsymetricDescrypt(encryptText);
+        // string textToEncrypt = "Aisha1";
+        // string encryptText = await _asymetricEcryptionHandler.AsymetricEncrypt(textToEncrypt);
+        // string decrypt = _asymetricEcryptionHandler.AsymetricDescrypt(encryptText);
 
 
 
@@ -138,6 +143,15 @@
     //     await userManager.AddToRoleAsync(identityUser, role);
     // }
 
+    private void keydown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs args)
+    {
+        if (args.Code == "Enter" || args.Code == "NumpadEnter")
+        {
+            addCpr();
+        }
+    }
+
+
     private void OnCprInput(ChangeEventArgs e)
     {
         var inputValue = (string)e.Value;
@@ -150,54 +164,35 @@
 
     private async Task addCpr()
     {
-
         var hashedCprNum = _hashingHandler.SHA256Hashing(inputValueCpr);
+
+        List<CprUser> results = cprs.FindAll(x => x.userName == _userName);
 
         if (string.IsNullOrEmpty(inputValueCpr))
         {
             return;
         }
 
-
-        if (cprs.Count == 0 && !string.IsNullOrEmpty(inputValueCpr))
+        if (results.Count() == 0)
         {
             await createNewCpr(hashedCprNum, _userName);
             inputValueCpr = "";
             isNotAuthCpr = false;
         }
-        else
-        {
-            foreach (var cprNumber in cprs)
+        else if (results.Count() == 1)
+ 
+            if (results[0].cprNum == hashedCprNum)
             {
-
-                if (cprNumber.userName == _userName)
-                {
-                    if (cprNumber.cprNum == hashedCprNum)
-                    {
-                        inputValueCpr = "";
-                        wrongCpr = false;
-                        isNotAuthCpr = false;
-                    }
-                    else
-                    {
-                        wrongCpr = true;
-                    }
-
-                } 
-
-                else
-                {
-                    if (!string.IsNullOrEmpty(inputValueItem))
-                    {
-                        await createNewCpr(hashedCprNum, _userName);
-
-                        inputValueCpr = "";
-                        isNotAuthCpr = false;
-                    }
-                }
+                inputValueCpr = "";
+                wrongCpr = false;
+                isNotAuthCpr = false;
             }
+            else
+            {
+                wrongCpr = true;
+            }
+
             StateHasChanged();
-        }
     }
 
     private async Task createNewCpr(string cpr, string name)

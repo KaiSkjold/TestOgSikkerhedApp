@@ -68,16 +68,22 @@
                 </tr>
             </thead>
             <tbody>
-            @foreach (var item in toDos.Where(x =>_asymetricEcryptionHandler.AsymetricDescrypt(x.userName) == _userName))
+            @if (!toDos.Any(x => _asymetricEcryptionHandler.AsymetricDescrypt(x.userName) == _userName))
+            {
+                <tr>
+                    <td colspan="2">You have no to-do items in your list</td>
+                </tr>
+            } else
+            {
+                @foreach (var item in toDos.Where(x => _asymetricEcryptionHandler.AsymetricDescrypt(x.userName) == _userName))
                 {
                     <tr>
-                     <td>@_asymetricEcryptionHandler.AsymetricDescrypt(item.itemName)</td>
-                    @if (toDos.Where(x => _asymetricEcryptionHandler.AsymetricDescrypt(x.userName) == _userName).Count() <= 0)
-                    {
-                        <td>You have no to do items in your list</td>
-                    }
+                        <td>@_asymetricEcryptionHandler.AsymetricDescrypt(item.itemName)</td>
+
                     </tr>
                 }
+            }
+
             </tbody>
         </table>
     }
